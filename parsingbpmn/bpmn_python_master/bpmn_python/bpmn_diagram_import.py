@@ -869,9 +869,10 @@ class BpmnDiagramGraphImport(object):
                 target_ref = list(element.attributes.values())[0].value
                 text = child.firstChild.nodeValue
                 textAnn.append(target_ref)
-                textAnn.append(text)
+                #textAnn.append(text)
                 textAnnotations.append(textAnn)
         diagram_graph.nodes[element_id][consts.Consts.textAnnotation] = textAnnotations
+        diagram_graph.nodes[element_id][consts.Consts.text_in_Textann]= text
 
     @classmethod
     def import_dataOutputAssociation(cls, diagram_graph, process_id, element):

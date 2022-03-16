@@ -106,6 +106,8 @@ class Consts(object):
     #Modifiche eGov
     textAnnotation = "textAnnotation"
     association = "association"
+    text_in_Textann = "text"
+    association_flow = "association"
 
     #data object
     dataObject = "dataObjectReference"

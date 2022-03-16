@@ -108,7 +108,7 @@ def bpmn_process_management(request, systemId):
                                         target_ref = assoc['association'][2]
                                         for textAnn in annotations:
                                             if (target_ref == textAnn['id']):
-                                                e = (textAnn['textAnnotation'][0][1])
+                                                e = (textAnn['text'])
                                     e = e.replace(" ", "_")
                                     e = e.lower()
                                 if e == "pec_communication":
@@ -127,7 +127,7 @@ def bpmn_process_management(request, systemId):
                                         target_ref = assoc['association'][2]
                                         for textAnn in annotations:
                                             if (target_ref == textAnn['id']):
-                                                e = (textAnn['textAnnotation'][0][1])
+                                                e = (textAnn['text'])
                                     e = e.replace(" ", "_")
                                     e = e.lower()
                                 if e == "pec_communication":
@@ -145,8 +145,10 @@ def bpmn_process_management(request, systemId):
                                     if (id_task == assoc['association'][1]):
                                         target_ref = assoc['association'][2]
                                         for textAnn in annotations:
+                                            print(textAnn)
                                             if (target_ref == textAnn['id']):
-                                                e = (textAnn['textAnnotation'][0][1])
+                                                e = (textAnn['text'])
+                                                print(e)
                                     e = e.replace(" ", "_")
                                     e = e.lower()
                                 if e == "online":
@@ -164,8 +166,10 @@ def bpmn_process_management(request, systemId):
                                     if (id_task == assoc['association'][1]):
                                         target_ref = assoc['association'][2]
                                         for textAnn in annotations:
+                                            print(textAnn)
                                             if (target_ref == textAnn['id']):
-                                                e = (textAnn['textAnnotation'][0][1])
+                                                e = (textAnn['text'])
+                                                print(e)
                                     e = e.replace(" ", "_")
                                 e = e.lower()
                                 if e == "statefull":

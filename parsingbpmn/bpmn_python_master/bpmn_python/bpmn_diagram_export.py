@@ -21,6 +21,7 @@ class BpmnDiagramGraphExport(object):
 
     # String "constants" used in multiple places
     bpmndi_namespace = "bpmndi:"
+    textbpmn="bpmn:text"
 
     @staticmethod
     def export_task_info(node_params, output_element):
@@ -33,6 +34,16 @@ class BpmnDiagramGraphExport(object):
         if consts.Consts.default in node_params and node_params[consts.Consts.default] is not None:
             output_element.set(consts.Consts.default, node_params[consts.Consts.default])
 
+    @staticmethod
+    def export_textAnnotation(node_params, output_element):
+        """
+        Adds TextAnn node attributes to exported XML element
+
+        :param node_params: dictionary with given task parameters,
+        :param output_element: object representing BPMN XML 'task' element.
+        """
+        if consts.Consts.default in node_params and node_params[consts.Consts.default] is not None:
+            output_element.set(consts.Consts.default, node_params[consts.Consts.default])
     @staticmethod
     def export_subprocess_info(bpmn_diagram, subprocess_params, output_element):
         """
@@ -93,6 +104,7 @@ class BpmnDiagramGraphExport(object):
         :param node_params: dictionary with given event based gateway parameters,
         :param output_element: object representing BPMN XML 'eventBasedGateway' element.
         """
+
         output_element.set(consts.Consts.gateway_direction, node_params[consts.Consts.gateway_direction])
         output_element.set(consts.Consts.instantiate, node_params[consts.Consts.instantiate])
         output_element.set(consts.Consts.event_gateway_type, node_params[consts.Consts.event_gateway_type])
@@ -319,14 +331,30 @@ class BpmnDiagramGraphExport(object):
         node_type = params[consts.Consts.type]
         output_element = eTree.SubElement(process, node_type)
         output_element.set(consts.Consts.id, process_id)
-        output_element.set(consts.Consts.name, params[consts.Consts.node_name])
 
-        for incoming in params[consts.Consts.incoming_flow]:
-            incoming_element = eTree.SubElement(output_element, consts.Consts.incoming_flow)
-            incoming_element.text = incoming
-        for outgoing in params[consts.Consts.outgoing_flow]:
-            outgoing_element = eTree.SubElement(output_element, consts.Consts.outgoing_flow)
-            outgoing_element.text = outgoing
+        try:
+            output_element.set(consts.Consts.name, params[consts.Consts.node_name])
+        except KeyError:
+            print()
+        try:
+            for incoming in params[consts.Consts.incoming_flow]:
+                incoming_element = eTree.SubElement(output_element, consts.Consts.incoming_flow)
+                incoming_element.text = incoming
+            for outgoing in params[consts.Consts.outgoing_flow]:
+                outgoing_element = eTree.SubElement(output_element, consts.Consts.outgoing_flow)
+                outgoing_element.text = outgoing
+
+
+
+        except KeyError:
+            print()
+        try:
+            for textAnn in params[consts.Consts.text_in_Textann]:
+                text_element = eTree.SubElement(output_element,consts.Consts.text_in_Textann)
+                text_element.text = params[consts.Consts.text_in_Textann]
+                print(textAnn,"1",text_element,text_element.text)
+        except KeyError:
+            print()
 
         if node_type == consts.Consts.task \
                 or node_type == consts.Consts.user_task \
@@ -353,6 +381,8 @@ class BpmnDiagramGraphExport(object):
             BpmnDiagramGraphExport.export_throw_event_info(params, output_element)
         elif node_type == consts.Consts.boundary_event:
             BpmnDiagramGraphExport.export_boundary_event_info(params, output_element)
+        elif node_type == consts.Consts.textAnnotation:
+            BpmnDiagramGraphExport.export_textAnnotation(params, output_element)
 
     @staticmethod
     def export_node_di_data(node_id, params, plane):
@@ -368,10 +398,14 @@ class BpmnDiagramGraphExport(object):
 
         output_element_di.set(consts.Consts.bpmn_element, node_id)
         bounds = eTree.SubElement(output_element_di, "omgdc:Bounds")
-        bounds.set(consts.Consts.width, params[consts.Consts.width])
-        bounds.set(consts.Consts.height, params[consts.Consts.height])
-        bounds.set(consts.Consts.x, params[consts.Consts.x])
-        bounds.set(consts.Consts.y, params[consts.Consts.y])
+        try:
+            bounds.set(consts.Consts.width, params[consts.Consts.width])
+            bounds.set(consts.Consts.height, params[consts.Consts.height])
+            bounds.set(consts.Consts.x, params[consts.Consts.x])
+            bounds.set(consts.Consts.y, params[consts.Consts.y])
+
+        except KeyError:
+            print()
         if params[consts.Consts.type] == consts.Consts.subprocess:
             output_element_di.set(consts.Consts.is_expanded, params[consts.Consts.is_expanded])
 
@@ -482,6 +516,7 @@ class BpmnDiagramGraphExport(object):
             for node in nodes:
                 node_id = node[0]
                 params = node[1]
+                print(node_id,"0000",params,"qui")
                 BpmnDiagramGraphExport.export_node_data(bpmn_diagram, node_id, params, process)
                 # BpmnDiagramGraphExport.export_node_di_data(node_id, params, plane)
 

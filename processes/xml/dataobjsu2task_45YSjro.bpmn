@@ -65,7 +65,7 @@
     <bpmn:sendTask id="Activity_11l7oi5" name="Notify certification ready">
       <bpmn:incoming>Flow_1l2c3sr</bpmn:incoming>
     </bpmn:sendTask>
-    <bpmn:sequenceFlow id="Flow_1l2c3sr" sourceRef="Activity_0yo8nd0" targetRef="Activity_11l7oi5" />
+    <© id="Flow_1l2c3sr" sourceRef="Activity_0yo8nd0" targetRef="Activity_11l7oi5" />
     <bpmn:sequenceFlow id="Flow_0pn90ry" sourceRef="Activity_075eaka" targetRef="Activity_0yo8nd0" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
