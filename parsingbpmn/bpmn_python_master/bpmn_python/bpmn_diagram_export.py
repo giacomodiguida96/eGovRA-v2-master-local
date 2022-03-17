@@ -35,6 +35,25 @@ class BpmnDiagramGraphExport(object):
             output_element.set(consts.Consts.default, node_params[consts.Consts.default])
 
     @staticmethod
+    def export_Association(node_params, output_element):
+        """
+        Adds TextAnn node attributes to exported XML element
+
+        :param node_params: dictionary with given task parameters,
+        :param output_element: object representing BPMN XML 'task' element.
+        """
+        #if consts.Consts.default in node_params and node_params[consts.Consts.default] is not None:
+            #output_element.set(consts.Consts.default, node_params[consts.Consts.default])        output_element.set(consts.Consts.id, node_params[consts.Consts.id])
+        # modificata con la seguente:
+        try:
+            output_element.set(consts.Consts.source_ref, node_params[consts.Consts.source_ref])
+            output_element.set(consts.Consts.target_ref, node_params[consts.Consts.target_ref])
+        except KeyError:
+            print()
+
+
+
+    @staticmethod
     def export_textAnnotation(node_params, output_element):
         """
         Adds TextAnn node attributes to exported XML element
@@ -348,11 +367,21 @@ class BpmnDiagramGraphExport(object):
 
         except KeyError:
             print()
+
+        #qui ho modificato io
         try:
             for textAnn in params[consts.Consts.text_in_Textann]:
                 text_element = eTree.SubElement(output_element,consts.Consts.text_in_Textann)
                 text_element.text = params[consts.Consts.text_in_Textann]
                 print(textAnn,"1",text_element,text_element.text)
+        except KeyError:
+            print()
+
+        try:
+            if params[consts.Consts.task][consts.Consts.dataOutputAssociation] != "":
+                data_element = eTree.SubElement(output_element,consts.Consts.dataOutputAssociation)
+                #text_element.text = params[consts.Consts.text_in_Textann]
+                print(data_element,"DATAELEMENT")
         except KeyError:
             print()
 
@@ -383,6 +412,8 @@ class BpmnDiagramGraphExport(object):
             BpmnDiagramGraphExport.export_boundary_event_info(params, output_element)
         elif node_type == consts.Consts.textAnnotation:
             BpmnDiagramGraphExport.export_textAnnotation(params, output_element)
+        elif node_type == consts.Consts.association:
+            BpmnDiagramGraphExport.export_Association(params, output_element)
 
     @staticmethod
     def export_node_di_data(node_id, params, plane):
@@ -393,14 +424,23 @@ class BpmnDiagramGraphExport(object):
         :param params: dictionary with node parameters,
         :param plane: object of Element class, representing BPMN XML 'BPMNPlane' element (root for node DI data).
         """
+
         output_element_di = eTree.SubElement(plane, BpmnDiagramGraphExport.bpmndi_namespace + consts.Consts.bpmn_shape)
         output_element_di.set(consts.Consts.id, node_id + "_gui")
 
         output_element_di.set(consts.Consts.bpmn_element, node_id)
         bounds = eTree.SubElement(output_element_di, "omgdc:Bounds")
+
         try:
             bounds.set(consts.Consts.width, params[consts.Consts.width])
             bounds.set(consts.Consts.height, params[consts.Consts.height])
+
+
+        except KeyError:
+            print()
+
+        try:
+
             bounds.set(consts.Consts.x, params[consts.Consts.x])
             bounds.set(consts.Consts.y, params[consts.Consts.y])
 
@@ -419,7 +459,10 @@ class BpmnDiagramGraphExport(object):
         """
         output_flow = eTree.SubElement(process, consts.Consts.sequence_flow)
         output_flow.set(consts.Consts.id, params[consts.Consts.id])
-        output_flow.set(consts.Consts.name, params[consts.Consts.name])
+        try:
+            output_flow.set(consts.Consts.name, params[consts.Consts.name])
+        except KeyError:
+            print()
         output_flow.set(consts.Consts.source_ref, params[consts.Consts.source_ref])
         output_flow.set(consts.Consts.target_ref, params[consts.Consts.target_ref])
         if consts.Consts.condition_expression in params:
@@ -441,7 +484,26 @@ class BpmnDiagramGraphExport(object):
         output_flow = eTree.SubElement(plane, BpmnDiagramGraphExport.bpmndi_namespace + consts.Consts.bpmn_edge)
         output_flow.set(consts.Consts.id, params[consts.Consts.id] + "_gui")
         output_flow.set(consts.Consts.bpmn_element, params[consts.Consts.id])
+
         waypoints = params[consts.Consts.waypoints]
+        for waypoint in waypoints:
+            waypoint_element = eTree.SubElement(output_flow, "omgdi:waypoint")
+            waypoint_element.set(consts.Consts.x, waypoint[0])
+            waypoint_element.set(consts.Consts.y, waypoint[1])
+
+    @staticmethod
+    def export_Association_xml(params, plane,x1,y1,x2,y2):
+        """
+        Creates a new BPMNEdge XML element for given edge parameters and adds it to 'plane' element.
+
+        :param params: dictionary with edge parameters,
+        :param plane: object of Element class, representing BPMN XML 'BPMNPlane' element (root for edge DI data).
+        """
+        output_flow = eTree.SubElement(plane, BpmnDiagramGraphExport.bpmndi_namespace + consts.Consts.bpmn_edge)
+        output_flow.set(consts.Consts.id, params[consts.Consts.id] + "_di")
+        output_flow.set(consts.Consts.bpmn_element, params[consts.Consts.id])
+
+        waypoints = [(x1, y1), (x2, y2)]
         for waypoint in waypoints:
             waypoint_element = eTree.SubElement(output_flow, "omgdi:waypoint")
             waypoint_element.set(consts.Consts.x, waypoint[0])
@@ -518,7 +580,7 @@ class BpmnDiagramGraphExport(object):
                 params = node[1]
                 print(node_id,"0000",params,"qui")
                 BpmnDiagramGraphExport.export_node_data(bpmn_diagram, node_id, params, process)
-                # BpmnDiagramGraphExport.export_node_di_data(node_id, params, plane)
+            # BpmnDiagramGraphExport.export_node_di_data(node_id, params, plane)
 
             # for each edge in graph add sequence flow element, its attributes and BPMNEdge element
             flows = bpmn_diagram.get_flows_list_by_process_id(process_id)
@@ -532,12 +594,18 @@ class BpmnDiagramGraphExport(object):
         for node in nodes:
             node_id = node[0]
             params = node[1]
-            BpmnDiagramGraphExport.export_node_di_data(node_id, params, plane)
+            #print(node,node_id,"NODI")
+            if params["type"] == consts.Consts.association:
+                BpmnDiagramGraphExport.export_Association_xml(params, plane,"100","100","150","150")
+            else:
+                BpmnDiagramGraphExport.export_node_di_data(node_id, params, plane)
 
         flows = bpmn_diagram.get_flows()
         for flow in flows:
             params = flow[2]
             BpmnDiagramGraphExport.export_flow_di_data(params, plane)
+            #print(flow,params,"FLOW")
+
 
         BpmnDiagramGraphExport.indent(definitions)
         tree = eTree.ElementTree(definitions)

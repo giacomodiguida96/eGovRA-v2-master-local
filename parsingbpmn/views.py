@@ -206,7 +206,6 @@ def bpmn_process_management(request, systemId):
                                 print()
                             asset = Asset(name=dizionario['node_name'], bpmn_id=dizionario["id"], position=position,
                                           process=Process.objects.get(pk=pk), asset_type=asset_type)
-                            print(asset, "aseeeeeeet")
 
                             asset.save()
 
@@ -1665,7 +1664,7 @@ def save_dataobject(request, systemId, processId):
     # print(request.POST.items, "sto qua")
     print(lista2)
     list_data = Asset.objects.filter(process=Process.objects.get(pk=processId), asset_type=asset_type).exclude(name="")
-    list_task = Asset.objects.filter(process=Process.objects.get(pk=processId)).exclude(asset_type=8)
+    list_task = Asset.objects.filter(process=Process.objects.get(pk=processId)).exclude(asset_type=9)
     print(list_task)
     return render(request, 'process_dataobject_enrichment.html',
                   {"systemId": systemId, "processId": processId, "list_data": list_data,"list_task":list_task,"task_with_data":task_with_data})
