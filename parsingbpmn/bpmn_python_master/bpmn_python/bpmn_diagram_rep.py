@@ -281,7 +281,32 @@ class BpmnDiagramGraph(object):
         self.diagram_graph._node[node_id][consts.Consts.y] = "100"
         return node_id, self.diagram_graph._node[node_id]
 
-    def add_dataObject_flow_node_to_diagram(self, process_id,type, text , node_id=None):
+    def add_dataObject_flow_node_to_diagram(self, process_id, node_id_do=None):
+        """
+        (process_id,text connected_task, node_id,)
+        Helper function that adds a new Flow Node to diagram. It is used to add a new node of specified type.
+        Adds a basic information inherited from Flow Node type.
+
+        :param process_id: string object. ID of parent process,
+        :param node_type: string object. Represents type of BPMN node passed to method,
+        :param name: string object. Name of the node,
+        :param node_id: string object. ID of node. Default value - None.
+        """
+        letters = string.ascii_letters
+        result_str = ''.join(random.choice(letters) for i in range(9))
+        if node_id_do is None:
+            node_id_do = "DataObject_"+ result_str
+
+        self.diagram_graph.add_node(node_id_do)
+        self.diagram_graph._node[node_id_do][consts.Consts.id] = node_id_do
+        self.diagram_graph._node[node_id_do][consts.Consts.process] = process_id
+        self.diagram_graph._node[node_id_do][consts.Consts.type] = consts.Consts.data_object
+        self.diagram_graph._node[node_id_do][consts.Consts.is_collection] = ""
+
+        return node_id_do,self.diagram_graph._node[node_id_do]
+        #return node_id2, self.diagram_graph._node[node_id2]
+
+    def add_dataObjectReference_flow_node_to_diagram(self, process_id, text , id_dataObject, node_id_dor=None):
         """
         (process_id,text connected_task, node_id,)
         Helper function that adds a new Flow Node to diagram. It is used to add a new node of specified type.
@@ -296,33 +321,25 @@ class BpmnDiagramGraph(object):
         result_str = ''.join(random.choice(letters) for i in range(9))
 
 
-        if node_id is None:
-            node_id = "DataObjectReference_"+ result_str
-            #node_id2 = "DataObject_"+ result_str
-        self.diagram_graph.add_node(node_id)
-        self.diagram_graph._node[node_id][consts.Consts.id] = node_id
-        self.diagram_graph._node[node_id][consts.Consts.type] = type
-        self.diagram_graph._node[node_id][consts.Consts.node_name] = text
-        #self.diagram_graph._node[node_id][consts.Consts.incoming_flow] = []
-        #self.diagram_graph._node[node_id][consts.Consts.outgoing_flow] = []
-        self.diagram_graph._node[node_id][consts.Consts.process] = process_id
-
-        #deve essere generata la coppia dataobj e dataobjref
-        #self.diagram_graph.add_node(node_id2)
-        #self.diagram_graph._node[node_id2][consts.Consts.type] = "dataObject"
-        #self.diagram_graph._node[node_id2][consts.Consts.process] = process_id
-
-
-
+        if node_id_dor is None:
+            node_id_dor = "DataObjectReference_"+ result_str
+        self.diagram_graph.add_node(node_id_dor)
+        self.diagram_graph._node[node_id_dor][consts.Consts.id] = node_id_dor
+        self.diagram_graph._node[node_id_dor][consts.Consts.type] = consts.Consts.dataObjectReference
+        self.diagram_graph._node[node_id_dor][consts.Consts.node_name] = text
+        # self.diagram_graph._node[node_id][consts.Consts.incoming_flow] = []
+        # self.diagram_graph._node[node_id][consts.Consts.outgoing_flow] = []
+        self.diagram_graph._node[node_id_dor][consts.Consts.process] = process_id
+        self.diagram_graph._node[node_id_dor][consts.Consts.dataObjectRef] = id_dataObject
 
 
 
         # Adding some dummy constant values
-        self.diagram_graph._node[node_id][consts.Consts.width] = "36"
-        self.diagram_graph._node[node_id][consts.Consts.height] = "50"
-        self.diagram_graph._node[node_id][consts.Consts.x] = "100"
-        self.diagram_graph._node[node_id][consts.Consts.y] = "100"
-        return node_id, self.diagram_graph._node[node_id]
+        self.diagram_graph._node[node_id_dor][consts.Consts.width] = "36"
+        self.diagram_graph._node[node_id_dor][consts.Consts.height] = "50"
+        self.diagram_graph._node[node_id_dor][consts.Consts.x] = "100"
+        self.diagram_graph._node[node_id_dor][consts.Consts.y] = "100"
+        return node_id_dor,self.diagram_graph._node[node_id_dor]
         #return node_id2, self.diagram_graph._node[node_id2]
 
     def add_Assocation_flow_node_to_diagram(self, process_id,type, sourceId,targetId , node_id=None):
@@ -406,7 +423,7 @@ class BpmnDiagramGraph(object):
         self.diagram_graph._node[node_id][consts.Consts.y] = "100"
         return node_id, self.diagram_graph._node[node_id]
 
-    def update_task_to_diagram(self,node_id, dataOut_Ass):
+    def update_task_to_diagram(self,node_id, dataOut_Ass, targetRef):
         """
         Helper function that adds a new Flow Node to diagram. It is used to add a new node of specified type.
         Adds a basic information inherited from Flow Node type.
@@ -416,7 +433,15 @@ class BpmnDiagramGraph(object):
         :param name: string object. Name of the node,
         :param node_id: string object. ID of node. Default value - None.
         """
+        letters = string.ascii_letters
+        result_str = ''.join(random.choice(letters) for i in range(9))
 
+        self.diagram_graph._node[node_id][consts.Consts.dataOutputAssociation] = {}
+        self.diagram_graph._node[node_id][consts.Consts.dataOutputAssociation][consts.Consts.id] = {}
+        self.diagram_graph._node[node_id][consts.Consts.dataOutputAssociation][consts.Consts.target_ref] = {}
+
+        if dataOut_Ass is None:
+            dataOut_Ass = "DataOutputAssociation_" + result_str
         #self.diagram_graph.add_node(node_id)
         #self.diagram_graph._node[node_id][consts.Consts.id] = node_id
         #self.diagram_graph._node[node_id][consts.Consts.type] = node_type
@@ -426,7 +451,9 @@ class BpmnDiagramGraph(object):
         #self.diagram_graph._node[node_id][consts.Consts.process] = process_id
 
         #Adding dataoutput association
-        self.diagram_graph._node[node_id][consts.Consts.dataOutputAssociation] = dataOut_Ass
+        self.diagram_graph._node[node_id][consts.Consts.dataOutputAssociation][consts.Consts.id] = dataOut_Ass
+        self.diagram_graph._node[node_id][consts.Consts.dataOutputAssociation][consts.Consts.target_ref] = targetRef
+
 
         # Adding some dummy constant values
         #self.diagram_graph._node[node_id][consts.Consts.width] = "100"
@@ -467,7 +494,39 @@ class BpmnDiagramGraph(object):
         """
         return self.add_textAnnotation_flow_node_to_diagram(process_id,consts.Consts.textAnnotation,text, node_id)
 
-    def add_dataObject_to_diagram(self, process_id, text="", node_id=None):
+    def add_dataObject_to_diagram(self, process_id,node_id=None):
+        """
+        Adds a dataObject element to BPMN diagram.
+        User-defined attributes:
+
+        - name
+
+
+        :param text: text related to TextAnnotation:
+        :param process_id: string object. ID of parent process,
+        :param connected_task: string object. Name of connected task
+        :param node_id: string object. ID of node. Default value - None.
+        :return: a tuple, where first value is task ID, second a reference to created object.
+        """
+        return self.add_dataObject_flow_node_to_diagram(process_id, node_id)
+
+    def add_dataObjectReference_to_diagram(self, process_id, text="", id_dataObject="", node_id=None):
+        """
+        Adds a dataObjectReference element to BPMN diagram.
+        User-defined attributes:
+
+        - name
+
+
+        :param text: text related to TextAnnotation:
+        :param process_id: string object. ID of parent process,
+        :param connected_task: string object. Name of connected task
+        :param node_id: string object. ID of node. Default value - None.
+        :return: a tuple, where first value is task ID, second a reference to created object.
+        """
+        return self.add_dataObjectReference_flow_node_to_diagram(process_id, text, id_dataObject, node_id)
+
+    def add_dataOutput_to_diagram(self, node_id,targetRef, dataOutput_id=""):
         """
         Adds a TextAnnotation element to BPMN diagram.
         User-defined attributes:
@@ -481,7 +540,7 @@ class BpmnDiagramGraph(object):
         :param node_id: string object. ID of node. Default value - None.
         :return: a tuple, where first value is task ID, second a reference to created object.
         """
-        return self.add_dataObject_flow_node_to_diagram(process_id,consts.Consts.dataObject,text, node_id)
+        return self.update_task_to_diagram(node_id,dataOutput_id,targetRef)
 
     def add_Assocation_to_diagram(self, process_id, sourceId, targetId, node_id=None):
         """
@@ -497,7 +556,7 @@ class BpmnDiagramGraph(object):
         :param node_id: string object. ID of node. Default value - None.
         :return: a tuple, where first value is task ID, second a reference to created object.
         """
-        return self.add_Assocation_flow_node_to_diagram(process_id,consts.Consts.dataObject,sourceId,targetId, node_id)
+        return self.add_Assocation_flow_node_to_diagram(process_id, consts.Consts.dataObjectReference, sourceId, targetId, node_id)
 
     def add_subprocess_to_diagram(self, process_id, subprocess_name, is_expanded=False, triggered_by_event=False,
                                   node_id=None):

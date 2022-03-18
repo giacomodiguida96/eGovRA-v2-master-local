@@ -109,7 +109,10 @@ class Consts(object):
     text_in_Textann = "text"
 
     #data object
-    dataObject = "dataObjectReference"
+    dataObjectReference = "dataObjectReference"
+    dataObjectRef = "dataObjectRef"
+
+
     dataOutputAssociation = "dataOutputAssociation"
 
 

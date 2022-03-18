@@ -94,8 +94,8 @@ def bpmn_process_management(request, systemId):
                             y = dizionario["y"]
                             width = dizionario["width"]
                             height = dizionario["height"]
-                            dataOutput = dizionario["dataOutputAssociation"]
-                            target_refOutput = dizionario["targetRef"]
+                            #dataOutput = dizionario["dataOutputAssociation"]["id"]
+                            #target_refOutput = dizionario["dataOutputAssociation"]["targetRef"]
 
                             # print(dataOutput)
                             asset_type = None
@@ -1645,17 +1645,22 @@ def save_dataobject(request, systemId, processId):
         for dizionario in tuple:
             if type(dizionario) is dict:
                 if dizionario['type'].lower().endswith("task"):
-                    if dizionario['dataOutputAssociation'] != "":
-                        key = dizionario["targetRef"]["targetRef"]
-                        #data_name=Asset.objects.filter(bpmn_id=key)
-                        for tuple2 in lista2:
-                            for dizionario2 in tuple2:
-                                if type(dizionario2) is dict:
-                                    #print(dizionario2["id"], dizionario["targetRef"]["targetRef"])
-                                    if dizionario2['id'] == key:
-                                        keydata = dizionario2["node_name"]
-                                        print(keydata)
-                                        task_with_data.append({"task": dizionario["node_name"], "data": dizionario2["node_name"]})
+                    try:
+                        if dizionario['dataOutputAssociation']["id"] != "":
+                            key = dizionario['dataOutputAssociation']["targetRef"]
+                            # data_name=Asset.objects.filter(bpmn_id=key)
+                            for tuple2 in lista2:
+                                for dizionario2 in tuple2:
+                                    if type(dizionario2) is dict:
+                                        # print(dizionario2["id"], dizionario["targetRef"]["targetRef"])
+                                        if dizionario2['id'] == key:
+                                            keydata = dizionario2["node_name"]
+                                            print(keydata)
+                                            task_with_data.append(
+                                                {"task": dizionario["node_name"], "data": dizionario2["node_name"]})
+
+                    except KeyError:
+                        print()
 
 
 

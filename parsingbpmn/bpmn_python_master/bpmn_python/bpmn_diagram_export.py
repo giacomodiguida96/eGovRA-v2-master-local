@@ -91,7 +91,7 @@ class BpmnDiagramGraphExport(object):
             BpmnDiagramGraphExport.export_flow_process_data(params, output_element)
 
     @staticmethod
-    def export_data_object_info(bpmn_diagram, data_object_params, output_element):
+    def export_data_object(bpmn_diagram, data_object_params, output_element):
         """
         Adds DataObject node attributes to exported XML element
 
@@ -99,7 +99,23 @@ class BpmnDiagramGraphExport(object):
         :param data_object_params: dictionary with given subprocess parameters,
         :param output_element: object representing BPMN XML 'subprocess' element.
         """
+
         output_element.set(consts.Consts.is_collection, data_object_params[consts.Consts.is_collection])
+
+    @staticmethod
+    def export_data_object_reference(bpmn_diagram, data_object_params, output_element):
+        """
+        Adds DataObject node attributes to exported XML element
+
+        :param bpmn_diagram: BPMNDiagramGraph class instantion representing a BPMN process diagram,
+        :param data_object_params: dictionary with given subprocess parameters,
+        :param output_element: object representing BPMN XML 'subprocess' element.
+        """
+        output_element.set(consts.Consts.dataObjectRef, data_object_params[consts.Consts.dataObjectRef])
+        try:
+            output_element.set(consts.Consts.is_collection, data_object_params[consts.Consts.is_collection])
+        except KeyError:
+            print()
 
     # TODO Complex gateway not fully supported
     #  need to find out how sequence of conditions is represented in BPMN 2.0 XML
@@ -347,9 +363,11 @@ class BpmnDiagramGraphExport(object):
         :param params: dictionary with node parameters,
         :param process: object of Element class, representing BPMN XML 'process' element (root for nodes).
         """
+        print(params)
         node_type = params[consts.Consts.type]
         output_element = eTree.SubElement(process, node_type)
         output_element.set(consts.Consts.id, process_id)
+        print(params)
 
         try:
             output_element.set(consts.Consts.name, params[consts.Consts.node_name])
@@ -373,15 +391,22 @@ class BpmnDiagramGraphExport(object):
             for textAnn in params[consts.Consts.text_in_Textann]:
                 text_element = eTree.SubElement(output_element,consts.Consts.text_in_Textann)
                 text_element.text = params[consts.Consts.text_in_Textann]
-                print(textAnn,"1",text_element,text_element.text)
+                #print(textAnn,"1",text_element,text_element.text)
         except KeyError:
             print()
 
         try:
-            if params[consts.Consts.task][consts.Consts.dataOutputAssociation] != "":
-                data_element = eTree.SubElement(output_element,consts.Consts.dataOutputAssociation)
+            if params[consts.Consts.dataOutputAssociation]:
+                #print(dataOut)
+                dataoutputchild = eTree.SubElement(output_element,consts.Consts.dataOutputAssociation,id=params[consts.Consts.dataOutputAssociation][consts.Consts.id])
+                #print(dataoutputchild)
+
+
+                data_element = eTree.SubElement(dataoutputchild,consts.Consts.target_ref)
+
+                data_element.text = params[consts.Consts.dataOutputAssociation][consts.Consts.target_ref]
                 #text_element.text = params[consts.Consts.text_in_Textann]
-                print(data_element,"DATAELEMENT")
+                #print(data_element,"DATAELEMENT",data_element.text)
         except KeyError:
             print()
 
@@ -389,11 +414,15 @@ class BpmnDiagramGraphExport(object):
                 or node_type == consts.Consts.user_task \
                 or node_type == consts.Consts.service_task \
                 or node_type == consts.Consts.manual_task:
+
             BpmnDiagramGraphExport.export_task_info(params, output_element)
         elif node_type == consts.Consts.subprocess:
             BpmnDiagramGraphExport.export_subprocess_info(bpmn_diagram, params, output_element)
+        elif node_type == consts.Consts.dataObjectReference:
+            print(params,"HERE")
+            BpmnDiagramGraphExport.export_data_object_reference(bpmn_diagram, params, output_element)
         elif node_type == consts.Consts.data_object:
-            BpmnDiagramGraphExport.export_data_object_info(bpmn_diagram, params, output_element)
+            BpmnDiagramGraphExport.export_data_object(bpmn_diagram, params, output_element)
         elif node_type == consts.Consts.complex_gateway:
             BpmnDiagramGraphExport.export_complex_gateway_info(params, output_element)
         elif node_type == consts.Consts.event_based_gateway:
@@ -414,6 +443,8 @@ class BpmnDiagramGraphExport(object):
             BpmnDiagramGraphExport.export_textAnnotation(params, output_element)
         elif node_type == consts.Consts.association:
             BpmnDiagramGraphExport.export_Association(params, output_element)
+
+
 
     @staticmethod
     def export_node_di_data(node_id, params, plane):
@@ -485,9 +516,13 @@ class BpmnDiagramGraphExport(object):
         output_flow.set(consts.Consts.id, params[consts.Consts.id] + "_gui")
         output_flow.set(consts.Consts.bpmn_element, params[consts.Consts.id])
 
+        prefix_waypoint= "omgdi:waypoint"
+
+
+
         waypoints = params[consts.Consts.waypoints]
         for waypoint in waypoints:
-            waypoint_element = eTree.SubElement(output_flow, "omgdi:waypoint")
+            waypoint_element = eTree.SubElement(output_flow, prefix_waypoint)
             waypoint_element.set(consts.Consts.x, waypoint[0])
             waypoint_element.set(consts.Consts.y, waypoint[1])
 
@@ -502,10 +537,14 @@ class BpmnDiagramGraphExport(object):
         output_flow = eTree.SubElement(plane, BpmnDiagramGraphExport.bpmndi_namespace + consts.Consts.bpmn_edge)
         output_flow.set(consts.Consts.id, params[consts.Consts.id] + "_di")
         output_flow.set(consts.Consts.bpmn_element, params[consts.Consts.id])
+        prefix_waypoint = "omgdi:waypoint"
+        print(params)
+        if params["id"].lower().startswith("dataoutput"):
+            prefix_waypoint = "di:waypoint"
 
         waypoints = [(x1, y1), (x2, y2)]
         for waypoint in waypoints:
-            waypoint_element = eTree.SubElement(output_flow, "omgdi:waypoint")
+            waypoint_element = eTree.SubElement(output_flow, prefix_waypoint)
             waypoint_element.set(consts.Consts.x, waypoint[0])
             waypoint_element.set(consts.Consts.y, waypoint[1])
 
@@ -595,7 +634,19 @@ class BpmnDiagramGraphExport(object):
             node_id = node[0]
             params = node[1]
             #print(node,node_id,"NODI")
+            if params["type"].lower().endswith("task"):
+                try:
+                    if params[consts.Consts.dataOutputAssociation]:
+                        BpmnDiagramGraphExport.export_Association_xml(params[consts.Consts.dataOutputAssociation],
+                                                                      plane, "100", "100", "150", "150")
+                    else:
+                        BpmnDiagramGraphExport.export_node_di_data(node_id, params, plane)
+
+                except KeyError:
+                    print()
+
             if params["type"] == consts.Consts.association:
+                #verranno cambiate le posizioni dinamicamente
                 BpmnDiagramGraphExport.export_Association_xml(params, plane,"100","100","150","150")
             else:
                 BpmnDiagramGraphExport.export_node_di_data(node_id, params, plane)

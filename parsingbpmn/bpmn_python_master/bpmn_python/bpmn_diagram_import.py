@@ -226,7 +226,10 @@ class BpmnDiagramGraphImport(object):
         elif tag_name == consts.Consts.textAnnotation:
             BpmnDiagramGraphImport.import_textAnnotation(diagram_graph, process_id, process_attributes,
                                                          element)
-        elif tag_name == consts.Consts.dataObject:
+        elif tag_name == consts.Consts.dataObjectReference:
+            BpmnDiagramGraphImport.import_data_object_reference_to_graph(diagram_graph, process_id, process_attributes,
+                                                               element)
+        elif tag_name == consts.Consts.data_object:
             BpmnDiagramGraphImport.import_data_object_to_graph(diagram_graph, process_id, process_attributes,
                                                                element)
 
@@ -388,7 +391,10 @@ class BpmnDiagramGraphImport(object):
                 tag_name = utils.BpmnImportUtils.remove_namespace_from_tag_name(tmp_element.tagName)
                 # print(tag_name)
                 if tag_name == consts.Consts.dataOutputAssociation:
-                    #data_child = []
+                    bpmn_graph.nodes[element_id][consts.Consts.dataOutputAssociation] = {}
+                    bpmn_graph.nodes[element_id][consts.Consts.dataOutputAssociation][consts.Consts.id] = {}
+                    bpmn_graph.nodes[element_id][consts.Consts.dataOutputAssociation][consts.Consts.target_ref] = {}
+                    # data_child = []
                     for child in tmp_element.childNodes:
                         # print(child)
 
@@ -396,60 +402,20 @@ class BpmnDiagramGraphImport(object):
                             target_ref = list(tmp_element.attributes.values())[0].nodeValue
                             text = child.firstChild.nodeValue
                             # print(text,target_ref)
-                            data_output=(target_ref)
-                            data_child=(text)
+                            data_output = (target_ref)
+                            data_child = (text)
+                            bpmn_graph.nodes[element_id][consts.Consts.dataOutputAssociation][consts.Consts.id] = (
+                                data_output)
+                            bpmn_graph.nodes[element_id][consts.Consts.dataOutputAssociation][
+                                consts.Consts.target_ref] = (data_child)
+
                             temp = {consts.Consts.dataOutputAssociation: target_ref, consts.Consts.target_ref: text}
                             # data_output.append(target_ref)
                             # data_output = {consts.Consts.dataOutputAssociation: target_ref}
                             # data_child ={consts.Consts.target_ref: target_ref}
                             # data_child = {consts.Consts.id: text}
                             # data_output = {consts.Consts.dataOutputAssociation: target_ref,
-                            # consts.Consts.target_ref: data_child}
-                            #print(data_output)
-
-                            # data_output[consts.Consts.dataOutputAssociation] = (target_ref)
-                            # data_output[consts.Consts.dataOutputAssociation][consts.Consts.target_ref]=(data_child)
-
-                            #print(data_child)
-
-                    #print(data_output)
-                    # data_output[consts.Consts.dataOutputAssociation]=(text)
-
-                """
-                dataoutput_value = tmp_element.parentNode
-                #print(incoming_value)
-                data_output.append(dataoutput_value)
-                """
-        #print(bpmn_graph.nodes[element_id][consts.Consts.dataOutputAssociation])
-
-        bpmn_graph.nodes[element_id][consts.Consts.dataOutputAssociation]=(data_output)
-        #bpmn_graph.nodes[element_id][consts.Consts.dataOutputAssociation][consts.Consts.target_ref]=(data_child)
-        #CONTINUA QUI
-        #ESEMPIO: dataOutputAssociation:[id:datassoc_id,targetRef:DatabojrefId]
-        bpmn_graph.nodes[element_id][consts.Consts.dataOutputAssociation][consts.Consts.target_ref] = (data_child)
-        # add incoming flow node list
-        incoming_list = []
-        for tmp_element in utils.BpmnImportUtils.iterate_elements(flow_node_element):
-            if tmp_element.nodeType != tmp_element.TEXT_NODE:
-                tag_name = utils.BpmnImportUtils.remove_namespace_from_tag_name(tmp_element.tagName)
-                if tag_name == consts.Consts.incoming_flow:
-                    incoming_value = tmp_element.firstChild.nodeValue
-                    incoming_list.append(incoming_value)
-
-        # print(incoming_list)
-        bpmn_graph.nodes[element_id][consts.Consts.incoming_flow] = incoming_list
-
-        # add outgoing flow node list
-
-        outgoing_list = []
-        for tmp_element in utils.BpmnImportUtils.iterate_elements(flow_node_element):
-            if tmp_element.nodeType != tmp_element.TEXT_NODE:
-                tag_name = utils.BpmnImportUtils.remove_namespace_from_tag_name(tmp_element.tagName)
-                if tag_name == consts.Consts.outgoing_flow:
-                    outgoing_value = tmp_element.firstChild.nodeValue
-                    outgoing_list.append(outgoing_value)
-
-        bpmn_graph.nodes[element_id][consts.Consts.outgoing_flow] = outgoing_list
+                            # consts.Consts.target_ref: data_child
 
     @staticmethod
     def import_task_to_graph(diagram_graph, process_id, process_attributes, task_element):
@@ -518,6 +484,30 @@ class BpmnDiagramGraphImport(object):
         BpmnDiagramGraphImport.import_flow_node_to_graph(diagram_graph, process_id, process_attributes,
                                                          data_object_element)
         data_object_id = data_object_element.getAttribute(consts.Consts.id)
+        diagram_graph.nodes[data_object_id][consts.Consts.is_collection] = \
+            data_object_element.getAttribute(consts.Consts.is_collection) \
+                if data_object_element.hasAttribute(consts.Consts.is_collection) else "false"
+
+    @staticmethod
+    def import_data_object_reference_to_graph(diagram_graph, process_id, process_attributes, data_object_element):
+        """
+        Adds to graph the new element that represents BPMN data object.
+        Data object inherits attributes from FlowNode. In addition, an attribute 'isCollection' is added to the node.
+
+        :param diagram_graph: NetworkX graph representing a BPMN process diagram,
+        :param process_id: string object, representing an ID of process element,
+        :param process_attributes: dictionary that holds attribute values of 'process' element, which is parent of
+            imported flow node,
+        :param data_object_element: object representing a BPMN XML 'dataObject' element.
+        """
+        #data_object_element.getAttribute(consts.Consts.dataObjectRef)
+
+        BpmnDiagramGraphImport.import_flow_node_to_graph(diagram_graph, process_id, process_attributes,
+                                                         data_object_element)
+        data_object_id = data_object_element.getAttribute(consts.Consts.id)
+        diagram_graph.nodes[data_object_id][consts.Consts.dataObjectRef]=\
+            data_object_element.getAttribute(consts.Consts.dataObjectRef)
+
         diagram_graph.nodes[data_object_id][consts.Consts.is_collection] = \
             data_object_element.getAttribute(consts.Consts.is_collection) \
                 if data_object_element.hasAttribute(consts.Consts.is_collection) else "false"
