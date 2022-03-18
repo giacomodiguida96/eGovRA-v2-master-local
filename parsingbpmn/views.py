@@ -16,7 +16,7 @@ from .forms import ProcessForm, SystemForm
 from .models import Process, Asset, System, Asset_has_attribute, Attribute, Asset_type, Attribute_value, \
     Threat_has_attribute, Threat_has_control, ThreatAgentRiskScores, TACategoryAttribute, ThreatAgentCategory, \
     System_ThreatAgent, TAReplies_Question, TAReplyCategory, Reply, ThreatAgentQuestion, StrideImpactRecord, Stride, \
-    Threat_Stride, Risk, OverallRisk, DataObject
+    Threat_Stride, Risk, OverallRisk, DataObject, Actor
 from .bpmn_python_master.bpmn_python import bpmn_diagram_rep as diagram
 
 
@@ -50,6 +50,8 @@ def bpmn_process_management(request, systemId):
             bpmn_graph = diagram.BpmnDiagramGraph()
             pk = last_process.pk
             bpmn_graph.load_diagram_from_xml_file(Process.objects.get(pk=pk).xml)
+            #var = Actor.objects.all().get_or_create("",last_process,"")
+
             lista = bpmn_graph.get_nodes()
 
             print(lista)
@@ -94,8 +96,11 @@ def bpmn_process_management(request, systemId):
                             y = dizionario["y"]
                             width = dizionario["width"]
                             height = dizionario["height"]
+                            process_id_bomn = dizionario["process"]
+
                             #dataOutput = dizionario["dataOutputAssociation"]["id"]
                             #target_refOutput = dizionario["dataOutputAssociation"]["targetRef"]
+
 
                             # print(dataOutput)
                             asset_type = None
@@ -183,7 +188,7 @@ def bpmn_process_management(request, systemId):
                                 asset_type = Asset_type.objects.get(name="Business rule task")
                                 attribute_value.append(Attribute_value.objects.get(value="Business rule task"))
                             asset = Asset(name=dizionario['node_name'], bpmn_id=id_task, position=position,
-                                          process=Process.objects.get(pk=pk), asset_type=asset_type)
+                                          process=Process.objects.get(pk=pk), asset_type=asset_type,process_bpmn_id=process_id_bomn)
                             asset.save()
                             attribute = []
                             for value in attribute_value:
@@ -201,11 +206,12 @@ def bpmn_process_management(request, systemId):
                                 y = dizionario["y"]
                                 width = dizionario["width"]
                                 height = dizionario["height"]
+                                process_id_bomn = dizionario["process"]
                                 position = x + ":" + y + ":" + width + ":" + height
                             except KeyError:
                                 print()
                             asset = Asset(name=dizionario['node_name'], bpmn_id=dizionario["id"], position=position,
-                                          process=Process.objects.get(pk=pk), asset_type=asset_type)
+                                          process=Process.objects.get(pk=pk), asset_type=asset_type,process_bpmn_id=process_id_bomn)
 
                             asset.save()
 
@@ -322,10 +328,10 @@ def process_view_attribute(request, systemId, processId):
         script = Attribute.objects.filter(asset_type=Asset_type.objects.get(name="Script task"))
         business = Attribute.objects.filter(asset_type=Asset_type.objects.get(name="Business rule task"))
         task_info = zip(task_list, list_attributes)
-        for task, attributes in task_info:
-            diagram.BpmnDiagramGraph.add_textAnnotation_to_diagram(task.process, "TestAnnot3", "TextAnnotation_0dpjutk")
+
         system = Process.objects.get(pk=processId).system
         processes = Process.objects.filter(system=system)
+
         return render(request, 'process_view_attribute.html', {
             'task_info': task_info, 'send': send, 'receive': receive, 'user': user, 'manual': manual,
             'service': service,
@@ -340,7 +346,8 @@ def process_enrichment(request, systemId, processId):
         pk = processId
         task_list = Asset.objects.filter(process=Process.objects.get(pk=pk))
         pathfile = Process.objects.filter(id=pk)[0].xml
-
+        bpmn_graph = diagram.BpmnDiagramGraph()
+        bpmn_graph.load_diagram_from_xml_file(pathfile)
         check_attribute = False
         for task in task_list:
             if not Asset_has_attribute.objects.filter(asset=task):
@@ -360,12 +367,9 @@ def process_enrichment(request, systemId, processId):
 
             for asset, attribute in zip(assets_for_process, attributes):
                 if attribute != None:
-                    asset_has_attribute = Asset_has_attribute(asset=asset, attribute=attribute)
-
-                    # writeTextAnnotation_bpmn(pathfile,asset.position,asset.bpmn_id,attribute.attribute_value)
-
-                    asset_has_attribute.save()
-
+                   print(asset.process_bpmn_id,attribute)
+                   bpmn_graph.add_textAnnotation_to_diagram(asset.process_bpmn_id,attribute.attribute_value.value, None)
+            bpmn_graph.export_xml_file(r"/Users/giacomodiguida/Documents/", "bpmnfinal.bpmn")
             return redirect('threats_and_controls', systemId, processId)
         else:
             assets_for_process = Asset.objects.filter(process=Process.objects.get(pk=pk))

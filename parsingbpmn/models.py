@@ -24,7 +24,6 @@ class Process(models.Model):
     xml = models.FileField(upload_to='processes/xml/',
                            validators=[FileExtensionValidator(allowed_extensions=['xml','bpmn'])])
     system = models.ForeignKey(System, on_delete=models.CASCADE)
-    processBpmnId = models.IntegerField(max_length=100,null=True)
 
     class Meta:
         verbose_name="Process"
@@ -37,6 +36,25 @@ class Process(models.Model):
         self.xml.delete()
         super().delete(*args, **kwargs)
 
+
+class Actor(models.Model):
+    name = models.CharField(max_length=100, null=True)
+    process = models.ForeignKey(System, on_delete=models.CASCADE)
+    process_bpmn_id = models.IntegerField(null=True)
+
+
+class Meta:
+    verbose_name = "Process"
+    verbose_name_plural = "Processes"
+
+
+def __str__(self):
+    return self.name
+
+
+def delete(self, *args, **kwargs):
+    self.xml.delete()
+    super().delete(*args, **kwargs)
 class Asset_type(models.Model):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=500)
@@ -54,6 +72,8 @@ class Asset(models.Model):
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
     asset_type = models.ForeignKey(Asset_type,on_delete=models.CASCADE,null=True)
     position=models.CharField(max_length=99,null=True)
+    process_bpmn_id = models.CharField(max_length=99,null=True)
+
 
     class Meta:
         verbose_name="Asset"
