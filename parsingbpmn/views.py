@@ -322,6 +322,8 @@ def process_view_attribute(request, systemId, processId):
         script = Attribute.objects.filter(asset_type=Asset_type.objects.get(name="Script task"))
         business = Attribute.objects.filter(asset_type=Asset_type.objects.get(name="Business rule task"))
         task_info = zip(task_list, list_attributes)
+        for task, attributes in task_info:
+            diagram.BpmnDiagramGraph.add_textAnnotation_to_diagram(task.process, "TestAnnot3", "TextAnnotation_0dpjutk")
         system = Process.objects.get(pk=processId).system
         processes = Process.objects.filter(system=system)
         return render(request, 'process_view_attribute.html', {

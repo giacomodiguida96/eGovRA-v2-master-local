@@ -24,6 +24,7 @@ class Process(models.Model):
     xml = models.FileField(upload_to='processes/xml/',
                            validators=[FileExtensionValidator(allowed_extensions=['xml','bpmn'])])
     system = models.ForeignKey(System, on_delete=models.CASCADE)
+    processBpmnId = models.IntegerField(max_length=100,null=True)
 
     class Meta:
         verbose_name="Process"

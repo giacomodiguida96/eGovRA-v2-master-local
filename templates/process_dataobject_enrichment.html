@@ -88,8 +88,11 @@
 
 
     </table>
-
+        <form method="POST" action="{% url 'process_view_task_type' systemId=systemId processId=processId%}">
+            {% csrf_token %}
         <input type="submit"  value="Save Data " class="btn btn-primary btn-sm" style="width: 300px;margin-left: 400px"/><br><br>
+        </form>
+
 
 
 
